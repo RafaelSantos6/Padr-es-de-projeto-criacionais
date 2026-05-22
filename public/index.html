@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Pedidos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        form { display: flex; flex-direction: column; gap: 10px; }
+        input, select, button { padding: 10px; font-size: 16px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+    <h1>E-commerce - Padrões Criacionais</h1>
+
+    <div class="card">
+        <h2>Novo Pedido</h2>
+        <form id="formPedido">
+            <input type="text" id="itens" placeholder="Ex: Teclado Mecânico" >
+            <input type="text" id="endereco" placeholder="Ex: Rua Joinville, 123" >
+            <select id="pagamento" >
+                <option value="">Selecione o pagamento...</option>
+                <option value="pix">PIX</option>
+                <option value="cartao">Cartão de Crédito</option>
+                <option value="boleto">Boleto</option>
+            </select>
+            <button type="submit">Cadastrar Pedido</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Pedidos Realizados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item</th>
+                    <th>Endereço</th>
+                    <th>Pagamento</th>
+                </tr>
+            </thead>
+            <tbody id="listaPedidos">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Função para buscar pedidos do Node.js e renderizar na tabela
+        async function carregarPedidos() {
+            const resposta = await fetch('/api/pedidos');
+            const pedidos = await resposta.json();
+            
+            const tbody = document.getElementById('listaPedidos');
+            tbody.innerHTML = ''; // Limpa a tabela antes de popular
+
+            pedidos.forEach(pedido => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${pedido.id}</td>
+                    <td>${pedido.itens}</td>
+                    <td>${pedido.endereco}</td>
+                    <td><span style="text-transform: uppercase;">${pedido.pagamento}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Função para interceptar o envio do formulário
+        document.getElementById('formPedido').addEventListener('submit', async (evento) => {
+            evento.preventDefault(); 
+            const itens = document.getElementById('itens').value;
+            const endereco = document.getElementById('endereco').value;
+            const pagamento = document.getElementById('pagamento').value;
+
+            // Envia os dados para a API
+            const resposta = await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itens, endereco, pagamento })
+            });
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+            } else {
+                // Sucesso: limpa o form e recarrega a tabela
+                document.getElementById('formPedido').reset();
+                carregarPedidos();
+            }
+        });
+
+        // Carrega os pedidos assim que a página abre
+        carregarPedidos();
+    </script>
+</body>
+</html>
